@@ -1,0 +1,6 @@
+[
+    {"id": "crm", "name": "CRM System", "color": "#4CAF50"},
+    {"id": "form", "name": "Web Forms", "color": "#2196F3"},
+    {"id": "email", "name": "Email Service", "color": "#F44336"},
+    {"id": "other", "name": "Other Sources", "color": "#9C27B0"}
+]

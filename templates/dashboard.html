@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title">Dashboard Overview</h2>
+                    <p class="text-muted">Real-time data visualization of webhook events</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <!-- Total Webhooks -->
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">Total Webhooks</h6>
+                            <h2 class="card-title mb-0" id="total-webhooks">0</h2>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Source-specific stats -->
+        {% for source in sources %}
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ source.name }}</h6>
+                            <h2 class="card-title mb-0" id="source-count-{{ source.id }}">0</h2>
+                        </div>
+                        <div class="stat-icon" style="color: {{ source.color }}">
+                            <i class="fas fa-{% if source.id == 'crm' %}users{% elif source.id == 'form' %}file-alt{% elif source.id == 'email' %}envelope{% else %}asterisk{% endif %}"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Line Chart: Webhooks by Day -->
+        <div class="col-md-8 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Webhooks Over Time</h5>
+                    <div class="chart-container">
+                        <canvas id="webhook-time-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Doughnut Chart: Source Distribution -->
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Source Distribution</h5>
+                    <div class="chart-container">
+                        <canvas id="source-distribution-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Recent Data -->
+    <div class="row mb-4">
+        <!-- Filters -->
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Filter Dashboard</h5>
+                    
+                    <form id="filter-form">
+                        <div class="mb-3">
+                            <label for="date-range" class="form-label">Date Range</label>
+                            <select class="form-select" id="date-range">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="week" selected>Last 7 Days</option>
+                                <option value="month">Last 30 Days</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        
+                        <div id="custom-date-range" class="mb-3" style="display: none;">
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="date-from" class="form-label">From</label>
+                                    <input type="date" class="form-control" id="date-from">
+                                </div>
+                                <div class="col-6">
+                                    <label for="date-to" class="form-label">To</label>
+                                    <input type="date" class="form-control" id="date-to">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Source Type</label>
+                            <div class="source-filter-checkboxes">
+                                {% for source in sources %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="{{ source.id }}" id="source-{{ source.id }}" checked>
+                                    <label class="form-check-label" for="source-{{ source.id }}">
+                                        {{ source.name }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <button type="button" class="btn btn-secondary" id="reset-filters">Reset</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Webhooks -->
+        <div class="col-md-8 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Webhook Data</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Source</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-webhooks-tbody">
+                                <tr>
+                                    <td colspan="3" class="text-center">No webhook data yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="/webhooks" class="btn btn-outline-primary btn-sm">View All</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

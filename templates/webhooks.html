@@ -1,0 +1,613 @@
+{% extends "layout.html" %}
+
+{% block title %}Webhooks{% endblock %}
+
+{% block content %}
+<div class="webhook-container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title">Webhook Management</h2>
+                    <p class="text-muted">Configure and monitor your webhook endpoints</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webhook Endpoints Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Webhook Endpoints</h5>
+                    <p>Use the following endpoint to receive data from your external services:</p>
+                    
+                    <div class="endpoint-info">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">POST</span>
+                            <input type="text" class="form-control" id="webhook-url" value="" readonly>
+                            <button class="btn btn-outline-secondary" type="button" id="copy-webhook-url">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mt-4">Integration Examples</h6>
+                    <div class="accordion" id="integrationExamples">
+                        <!-- cURL Example -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="curlHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#curlExample" aria-expanded="false" aria-controls="curlExample">
+                                    cURL Example
+                                </button>
+                            </h2>
+                            <div id="curlExample" class="accordion-collapse collapse" aria-labelledby="curlHeading">
+                                <div class="accordion-body">
+                                    <pre><code id="curl-example">curl -X POST "https://your-domain.com/api/webhook" \
+    -H "Content-Type: application/json" \
+    -d '{"source": "form", "name": "John Doe", "email": "john@example.com", "message": "Hello world"}'</code></pre>
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button" id="copy-curl">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- JavaScript Example -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="jsHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#jsExample" aria-expanded="false" aria-controls="jsExample">
+                                    JavaScript Example
+                                </button>
+                            </h2>
+                            <div id="jsExample" class="accordion-collapse collapse" aria-labelledby="jsHeading">
+                                <div class="accordion-body">
+                                    <pre><code id="js-example">fetch('https://your-domain.com/api/webhook', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        source: 'form',
+        name: 'John Doe',
+        email: 'john@example.com',
+        message: 'Hello world'
+    })
+})
+.then(response => response.json())
+.then(data => console.log('Success:', data))
+.catch(error => console.error('Error:', error));</code></pre>
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button" id="copy-js">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Python Example -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="pythonHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pythonExample" aria-expanded="false" aria-controls="pythonExample">
+                                    Python Example
+                                </button>
+                            </h2>
+                            <div id="pythonExample" class="accordion-collapse collapse" aria-labelledby="pythonHeading">
+                                <div class="accordion-body">
+                                    <pre><code id="python-example">import requests
+import json
+
+url = "https://your-domain.com/api/webhook"
+payload = {
+    "source": "form",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "message": "Hello world"
+}
+
+response = requests.post(url, json=payload)
+print(response.json())</code></pre>
+                                    <button class="btn btn-sm btn-outline-secondary mt-2" type="button" id="copy-python">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webhook Data Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">Captured Webhook Data</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="#" id="export-json">JSON</a></li>
+                                <li><a class="dropdown-item" href="#" id="export-csv">CSV</a></li>
+                                <li><a class="dropdown-item" href="#" id="export-excel">Excel</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="webhook-filters">
+                        <div class="input-group">
+                            <select class="form-select" id="source-filter">
+                                <option value="">All Sources</option>
+                                {% for source in sources %}
+                                <option value="{{ source.id }}">{{ source.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="date" class="form-control" id="date-from" placeholder="From Date">
+                            <input type="date" class="form-control" id="date-to" placeholder="To Date">
+                            <button class="btn btn-outline-secondary" type="button" id="apply-webhook-filter">Filter</button>
+                            <button class="btn btn-outline-secondary" type="button" id="reset-webhook-filter">Reset</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Source</th>
+                                    <th>Data</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="webhook-data-tbody">
+                                <tr>
+                                    <td colspan="4" class="text-center">No webhook data captured yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-controls" class="d-flex justify-content-center">
+                        <button class="btn btn-sm btn-outline-secondary me-2" id="prev-page" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span class="pagination-info align-self-center">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+                        <button class="btn btn-sm btn-outline-secondary ms-2" id="next-page" disabled>
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Webhook Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Test Webhook</h5>
+                    <p>Use this form to test your webhook endpoint:</p>
+                    
+                    <form id="test-webhook-form">
+                        <div class="mb-3">
+                            <label for="test-source" class="form-label">Source</label>
+                            <select class="form-select" id="test-source" required>
+                                {% for source in sources %}
+                                <option value="{{ source.id }}">{{ source.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="test-data" class="form-label">JSON Payload</label>
+                            <textarea class="form-control" id="test-data" rows="5" required>{
+  "source": "form",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "message": "This is a test webhook"
+}</textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Send Test Webhook</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for webhook details -->
+<div class="modal fade" id="webhook-details-modal" tabindex="-1" aria-labelledby="webhook-details-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="webhook-details-title">Webhook Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">ID</label>
+                    <input type="text" class="form-control" id="detail-id" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Timestamp</label>
+                    <input type="text" class="form-control" id="detail-timestamp" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Source</label>
+                    <input type="text" class="form-control" id="detail-source" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Payload</label>
+                    <pre id="detail-payload" class="p-3 bg-light rounded"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set the webhook URL in the input field
+        const webhookUrl = `${window.location.protocol}//${window.location.host}/api/webhook`;
+        document.getElementById('webhook-url').value = webhookUrl;
+        
+        // Update example code with actual URL
+        document.getElementById('curl-example').textContent = document.getElementById('curl-example').textContent.replace('https://your-domain.com/api/webhook', webhookUrl);
+        document.getElementById('js-example').textContent = document.getElementById('js-example').textContent.replace('https://your-domain.com/api/webhook', webhookUrl);
+        document.getElementById('python-example').textContent = document.getElementById('python-example').textContent.replace('https://your-domain.com/api/webhook', webhookUrl);
+        
+        // Export data event handlers
+        document.getElementById('export-json').addEventListener('click', function(e) {
+            e.preventDefault();
+            exportData('json');
+        });
+        
+        document.getElementById('export-csv').addEventListener('click', function(e) {
+            e.preventDefault();
+            exportData('csv');
+        });
+        
+        document.getElementById('export-excel').addEventListener('click', function(e) {
+            e.preventDefault();
+            exportData('excel');
+        });
+        
+        // Copy Webhook URL 
+        document.getElementById('copy-webhook-url').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('webhook-url').value);
+            showToast('Webhook URL copied to clipboard!');
+        });
+        
+        // Copy example code
+        document.getElementById('copy-curl').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('curl-example').textContent);
+            showToast('cURL example copied to clipboard!');
+        });
+        
+        document.getElementById('copy-js').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('js-example').textContent);
+            showToast('JavaScript example copied to clipboard!');
+        });
+        
+        document.getElementById('copy-python').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('python-example').textContent);
+            showToast('Python example copied to clipboard!');
+        });
+        
+        // Load webhook data
+        loadWebhookData();
+        
+        // Filter handlers
+        document.getElementById('apply-webhook-filter').addEventListener('click', function() {
+            loadWebhookData(1);
+        });
+        
+        document.getElementById('reset-webhook-filter').addEventListener('click', function() {
+            document.getElementById('source-filter').value = '';
+            document.getElementById('date-from').value = '';
+            document.getElementById('date-to').value = '';
+            loadWebhookData(1);
+        });
+        
+        // Pagination handlers
+        document.getElementById('prev-page').addEventListener('click', function() {
+            const currentPage = parseInt(document.getElementById('current-page').textContent);
+            if (currentPage > 1) {
+                loadWebhookData(currentPage - 1);
+            }
+        });
+        
+        document.getElementById('next-page').addEventListener('click', function() {
+            const currentPage = parseInt(document.getElementById('current-page').textContent);
+            const totalPages = parseInt(document.getElementById('total-pages').textContent);
+            if (currentPage < totalPages) {
+                loadWebhookData(currentPage + 1);
+            }
+        });
+        
+        // Test webhook form
+        document.getElementById('test-webhook-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const source = document.getElementById('test-source').value;
+            let data;
+            
+            try {
+                data = JSON.parse(document.getElementById('test-data').value);
+                // Ensure the source in the data matches the selected source
+                data.source = source;
+            } catch (error) {
+                showToast('Invalid JSON data. Please check your payload.', 'error');
+                return;
+            }
+            
+            fetch('/api/webhook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showToast('Test webhook sent successfully!');
+                    // Reload webhook data after a short delay
+                    setTimeout(() => loadWebhookData(1), 1000);
+                } else {
+                    showToast('Error sending test webhook: ' + result.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Error sending test webhook: ' + error, 'error');
+            });
+        });
+    });
+    
+    function exportData(format) {
+        // Get current filters
+        const sourceFilter = document.getElementById('source-filter').value;
+        const dateFrom = document.getElementById('date-from').value;
+        const dateTo = document.getElementById('date-to').value;
+        
+        // Build export URL with filters
+        let url = `/api/webhook/export?format=${format}`;
+        
+        if (sourceFilter) {
+            url += `&source=${encodeURIComponent(sourceFilter)}`;
+        }
+        
+        if (dateFrom) {
+            // Convert local date to ISO format
+            const fromDate = new Date(dateFrom);
+            url += `&from=${fromDate.toISOString().split('T')[0]}T00:00:00`;
+        }
+        
+        if (dateTo) {
+            // Convert local date to ISO format
+            const toDate = new Date(dateTo);
+            url += `&to=${toDate.toISOString().split('T')[0]}T23:59:59`;
+        }
+        
+        // Add pretty option for JSON format
+        if (format === 'json') {
+            url += '&pretty=true';
+        }
+        
+        // Show toast message
+        showToast(`Exporting data as ${format.toUpperCase()}...`);
+        
+        // Download the file
+        window.location.href = url;
+    }
+    
+    function loadWebhookData(page = 1, pageSize = 10) {
+        const sourceFilter = document.getElementById('source-filter').value;
+        const dateFrom = document.getElementById('date-from').value;
+        const dateTo = document.getElementById('date-to').value;
+        
+        // Build URL with filters
+        let url = '/api/webhook/data';
+        const params = new URLSearchParams();
+        
+        if (sourceFilter) {
+            params.append('source', sourceFilter);
+        }
+        
+        if (dateFrom) {
+            // Convert local date to ISO format
+            const fromDate = new Date(dateFrom);
+            params.append('from', fromDate.toISOString().split('T')[0] + 'T00:00:00');
+        }
+        
+        if (dateTo) {
+            // Convert local date to ISO format
+            const toDate = new Date(dateTo);
+            params.append('to', toDate.toISOString().split('T')[0] + 'T23:59:59');
+        }
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayWebhookData(data.data, page, pageSize);
+                } else {
+                    document.getElementById('webhook-data-tbody').innerHTML = 
+                        `<tr><td colspan="4" class="text-center">Error loading data: ${data.message}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('webhook-data-tbody').innerHTML = 
+                    `<tr><td colspan="4" class="text-center">Error loading data: ${error}</td></tr>`;
+            });
+    }
+    
+    function displayWebhookData(data, page, pageSize) {
+        const tbody = document.getElementById('webhook-data-tbody');
+        
+        // Calculate pagination
+        const totalItems = data.length;
+        const totalPages = Math.ceil(totalItems / pageSize);
+        
+        document.getElementById('current-page').textContent = page;
+        document.getElementById('total-pages').textContent = totalPages || 1;
+        
+        // Enable/disable pagination buttons
+        document.getElementById('prev-page').disabled = page <= 1;
+        document.getElementById('next-page').disabled = page >= totalPages;
+        
+        // Sort data by timestamp (newest first)
+        data.sort((a, b) => {
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+        
+        // Paginate data
+        const startIndex = (page - 1) * pageSize;
+        const paginatedData = data.slice(startIndex, startIndex + pageSize);
+        
+        if (paginatedData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No webhook data found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        paginatedData.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Format timestamp
+            const timestamp = new Date(item.timestamp);
+            const formattedTime = `${timestamp.toLocaleDateString()} ${timestamp.toLocaleTimeString()}`;
+            
+            // Create a summary of the data
+            let dataSummary = '';
+            if (item.data) {
+                const keys = Object.keys(item.data).filter(key => key !== 'source');
+                if (keys.length > 0) {
+                    const key = keys[0];
+                    dataSummary = `${key}: ${item.data[key].toString().substring(0, 30)}${item.data[key].toString().length > 30 ? '...' : ''}`;
+                    if (keys.length > 1) {
+                        dataSummary += ` (+${keys.length - 1} more fields)`;
+                    }
+                }
+            }
+            
+            // Set row HTML
+            row.innerHTML = `
+                <td>${formattedTime}</td>
+                <td><span class="badge" style="background-color: ${getSourceColor(item.source)}">${item.source || 'other'}</span></td>
+                <td>${dataSummary || 'No data'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-info view-details" data-id="${item.id}">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        // Add event listeners to view detail buttons
+        document.querySelectorAll('.view-details').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                showWebhookDetails(id, data);
+            });
+        });
+    }
+    
+    function showWebhookDetails(id, data) {
+        // Find the webhook data with the matching ID
+        const webhook = data.find(item => item.id === id);
+        
+        if (!webhook) {
+            showToast('Webhook details not found', 'error');
+            return;
+        }
+        
+        // Format timestamp
+        const timestamp = new Date(webhook.timestamp);
+        const formattedTime = `${timestamp.toLocaleDateString()} ${timestamp.toLocaleTimeString()}`;
+        
+        // Fill in the modal fields
+        document.getElementById('detail-id').value = webhook.id;
+        document.getElementById('detail-timestamp').value = formattedTime;
+        document.getElementById('detail-source').value = webhook.source || 'other';
+        document.getElementById('detail-payload').textContent = JSON.stringify(webhook.data, null, 2);
+        
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('webhook-details-modal'));
+        modal.show();
+    }
+    
+    function getSourceColor(source) {
+        const sourceColors = {
+            'crm': '#4CAF50',
+            'form': '#2196F3',
+            'email': '#F44336',
+            'other': '#9C27B0'
+        };
+        
+        return sourceColors[source] || sourceColors.other;
+    }
+    
+    function copyToClipboard(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+    }
+    
+    function showToast(message, type = 'success') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Create toast element
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toastEl);
+        
+        // Initialize and show the toast
+        const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+        toast.show();
+        
+        // Remove toast after it's hidden
+        toastEl.addEventListener('hidden.bs.toast', function() {
+            toastEl.remove();
+        });
+    }
+</script>
+{% endblock %}

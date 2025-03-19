@@ -1,0 +1,595 @@
+{% extends "layout.html" %}
+
+{% block title %}Integrations{% endblock %}
+
+{% block content %}
+<div class="integration-container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title">Service Integrations</h2>
+                    <p class="text-muted">Connect your dashboard to external services</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Tiles -->
+    <div class="row mb-4">
+        <!-- Email Integration -->
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm integration-card" data-integration="email">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-envelope integration-icon text-primary"></i>
+                            Email Notifications
+                        </h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="email-integration-toggle">
+                        </div>
+                    </div>
+
+                    <p class="card-text">Send notifications via email when new webhook data is received.</p>
+
+                    <div class="integration-settings" style="display: none;">
+                        <form id="email-settings-form">
+                            <div class="mb-3">
+                                <label for="email-recipient" class="form-label">Recipient Email</label>
+                                <input type="email" class="form-control" id="email-recipient" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email-subject" class="form-label">Subject Template</label>
+                                <input type="text" class="form-control" id="email-subject" value="New {{source}} webhook received" required>
+                                <small class="form-text text-muted">Use {{source}} as a placeholder for the webhook source</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email-triggers" class="form-label">Send notification when</label>
+                                <select class="form-select" id="email-triggers">
+                                    <option value="all">Any webhook is received</option>
+                                    <option value="crm">CRM webhook is received</option>
+                                    <option value="form">Form webhook is received</option>
+                                    <option value="email">Email webhook is received</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRM Integration -->
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm integration-card" data-integration="crm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users integration-icon text-success"></i>
+                            CRM Integration
+                        </h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="crm-integration-toggle">
+                        </div>
+                    </div>
+
+                    <p class="card-text">Connect to a CRM system to track leads and customer data.</p>
+
+                    <div class="integration-settings" style="display: none;">
+                        <form id="crm-settings-form">
+                            <div class="mb-3">
+                                <label for="crm-type" class="form-label">CRM System</label>
+                                <select class="form-select" id="crm-type">
+                                    <option value="hubspot">HubSpot</option>
+                                    <option value="salesforce">Salesforce</option>
+                                    <option value="zoho">Zoho CRM</option>
+                                    <option value="pipedrive">Pipedrive</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="crm-api-key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="crm-api-key" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="crm-mapping" class="form-label">Field Mapping</label>
+                                <div class="crm-mapping-container">
+                                    <div class="mapping-row mb-2">
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <select class="form-select webhook-field">
+                                                    <option value="name">Name</option>
+                                                    <option value="email">Email</option>
+                                                    <option value="message">Message</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-2 text-center">
+                                                <span class="mapping-arrow">→</span>
+                                            </div>
+                                            <div class="col-5">
+                                                <select class="form-select crm-field">
+                                                    <option value="name">Contact Name</option>
+                                                    <option value="email">Email Address</option>
+                                                    <option value="notes">Notes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="add-mapping">
+                                        <i class="fas fa-plus"></i> Add Field
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                            <button type="button" class="btn btn-outline-secondary" id="test-crm-connection">Test Connection</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Slack Integration -->
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm integration-card" data-integration="slack">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fab fa-slack integration-icon text-info"></i>
+                            Slack Notifications
+                        </h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="slack-integration-toggle">
+                        </div>
+                    </div>
+
+                    <p class="card-text">Send notifications to your Slack workspace when events occur.</p>
+
+                    <div class="integration-settings" style="display: none;">
+                        <form id="slack-settings-form">
+                            <div class="mb-3">
+                                <label for="slack-webhook-url" class="form-label">Webhook URL</label>
+                                <input type="url" class="form-control" id="slack-webhook-url" placeholder="https://hooks.slack.com/services/..." required>
+                                <small class="form-text text-muted">Get this from Slack's incoming webhook app</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="slack-channel" class="form-label">Channel (optional)</label>
+                                <input type="text" class="form-control" id="slack-channel" placeholder="#webhooks">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="slack-message-template" class="form-label">Message Template</label>
+                                <textarea class="form-control" id="slack-message-template" rows="3">New {{source}} webhook received! {{summary}}</textarea>
+                                <small class="form-text text-muted">Use {{source}} and {{summary}} as placeholders</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                            <button type="button" class="btn btn-outline-secondary" id="test-slack">Send Test Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SMS Integration -->
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm integration-card" data-integration="sms">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-sms integration-icon text-warning"></i>
+                            SMS Alerts
+                        </h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="sms-integration-toggle">
+                        </div>
+                    </div>
+
+                    <p class="card-text">Receive SMS text messages for important notifications.</p>
+
+                    <div class="integration-settings" style="display: none;">
+                        <form id="sms-settings-form">
+                            <div class="mb-3">
+                                <label class="form-label">SMS Provider</label>
+                                <select class="form-select" id="sms-provider">
+                                    <option value="twilio">Twilio</option>
+                                    <option value="nexmo">Nexmo/Vonage</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="sms-api-key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="sms-api-key" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="sms-phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="sms-phone" placeholder="+1234567890" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="sms-importance" class="form-label">When to send SMS</label>
+                                <select class="form-select" id="sms-importance">
+                                    <option value="all">All webhooks</option>
+                                    <option value="high" selected>High importance only</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Analytics Integration -->
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm integration-card" data-integration="google-analytics">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fab fa-google integration-icon text-primary"></i>
+                        Google Analytics
+                    </h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="ga-integration-toggle">
+                    </div>
+                </div>
+
+                <p class="card-text">Track user interactions and website analytics.</p>
+
+                <div class="integration-settings" style="display: none;">
+                    <form id="ga-settings-form">
+                        <div class="mb-3">
+                            <label for="ga-tracking-id" class="form-label">Tracking ID</label>
+                            <input type="text" class="form-control" id="ga-tracking-id" placeholder="UA-XXXXXXXXX-X" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ga-data-stream" class="form-label">Data Stream Name</label>
+                            <input type="text" class="form-control" id="ga-data-stream" placeholder="Web Stream">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Facebook Integration -->
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm integration-card" data-integration="facebook">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fab fa-facebook integration-icon text-primary"></i>
+                        Facebook
+                    </h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="fb-integration-toggle">
+                    </div>
+                </div>
+
+                <p class="card-text">Connect with Facebook for social interactions and analytics.</p>
+
+                <div class="integration-settings" style="display: none;">
+                    <form id="fb-settings-form">
+                        <div class="mb-3">
+                            <label for="fb-app-id" class="form-label">App ID</label>
+                            <input type="text" class="form-control" id="fb-app-id" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fb-app-secret" class="form-label">App Secret</label>
+                            <input type="password" class="form-control" id="fb-app-secret" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fb-features" class="form-label">Features to Enable</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="fb-pixel">
+                                <label class="form-check-label" for="fb-pixel">Facebook Pixel</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="fb-social">
+                                <label class="form-check-label" for="fb-social">Social Plugins</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coming Soon Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Coming Soon</h5>
+                    <p>We're working on adding more integrations. Stay tuned for updates!</p>
+
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="coming-soon-integration">
+                                <i class="fab fa-whatsapp"></i>
+                                <p>WhatsApp</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="coming-soon-integration">
+                                <i class="fab fa-zapier"></i>
+                                <p>Zapier</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="coming-soon-integration">
+                                <i class="fab fa-google"></i>
+                                <p>Google Sheets</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="coming-soon-integration">
+                                <i class="fab fa-github"></i>
+                                <p>GitHub</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Toasts Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle integration settings when switches are toggled
+        const integrationToggles = document.querySelectorAll('.form-check-input');
+        integrationToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const card = this.closest('.integration-card');
+                const settings = card.querySelector('.integration-settings');
+                settings.style.display = this.checked ? 'block' : 'none';
+            });
+        });
+
+        // Email integration form submission
+        document.getElementById('email-settings-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                recipient: document.getElementById('email-recipient').value,
+                subject: document.getElementById('email-subject').value,
+                trigger: document.getElementById('email-triggers').value
+            };
+
+            // In a real app, this would be saved to a server
+            console.log('Email integration settings:', formData);
+
+            // Simulate success
+            showToast('Email integration settings saved successfully!');
+        });
+
+        // CRM integration form submission
+        document.getElementById('crm-settings-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Get field mappings
+            const mappings = [];
+            const mappingRows = document.querySelectorAll('.mapping-row');
+
+            mappingRows.forEach(row => {
+                const webhookField = row.querySelector('.webhook-field').value;
+                const crmField = row.querySelector('.crm-field').value;
+
+                mappings.push({
+                    webhook: webhookField,
+                    crm: crmField
+                });
+            });
+
+            const formData = {
+                crmType: document.getElementById('crm-type').value,
+                apiKey: document.getElementById('crm-api-key').value,
+                fieldMappings: mappings
+            };
+
+            // In a real app, this would be saved to a server
+            console.log('CRM integration settings:', formData);
+
+            // Simulate success
+            showToast('CRM integration settings saved successfully!');
+        });
+
+        // Add field mapping row
+        document.getElementById('add-mapping').addEventListener('click', function() {
+            const container = document.querySelector('.crm-mapping-container');
+            const mappingRow = document.querySelector('.mapping-row').cloneNode(true);
+
+            // Clear selected values
+            mappingRow.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+
+            // Insert before the Add button
+            container.insertBefore(mappingRow, this);
+        });
+
+        // Test CRM connection
+        document.getElementById('test-crm-connection').addEventListener('click', function() {
+            const crmType = document.getElementById('crm-type').value;
+            const apiKey = document.getElementById('crm-api-key').value;
+
+            if (!apiKey) {
+                showToast('Please enter an API key', 'error');
+                return;
+            }
+
+            // Simulate API request
+            fetch('/api/integrations/crm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: crmType,
+                    action: 'test_connection',
+                    apiKey: apiKey
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showToast('CRM connection test successful!');
+                } else {
+                    showToast('CRM connection test failed: ' + result.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Error testing CRM connection: ' + error, 'error');
+            });
+        });
+
+        // Slack integration form submission
+        document.getElementById('slack-settings-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                webhookUrl: document.getElementById('slack-webhook-url').value,
+                channel: document.getElementById('slack-channel').value,
+                messageTemplate: document.getElementById('slack-message-template').value
+            };
+
+            // In a real app, this would be saved to a server
+            console.log('Slack integration settings:', formData);
+
+            // Simulate success
+            showToast('Slack integration settings saved successfully!');
+        });
+
+        // Test Slack message
+        document.getElementById('test-slack').addEventListener('click', function() {
+            const webhookUrl = document.getElementById('slack-webhook-url').value;
+            const channel = document.getElementById('slack-channel').value;
+            const message = document.getElementById('slack-message-template').value
+                .replace('{{source}}', 'test')
+                .replace('{{summary}}', 'This is a test message');
+
+            if (!webhookUrl) {
+                showToast('Please enter a Slack webhook URL', 'error');
+                return;
+            }
+
+            // Simulate sending a message to Slack
+            showToast('Test message would be sent to Slack in production');
+        });
+
+        // SMS integration form submission
+        document.getElementById('sms-settings-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                provider: document.getElementById('sms-provider').value,
+                apiKey: document.getElementById('sms-api-key').value,
+                phone: document.getElementById('sms-phone').value,
+                importance: document.getElementById('sms-importance').value
+            };
+
+            // In a real app, this would be saved to a server
+            console.log('SMS integration settings:', formData);
+
+            // Simulate success
+            showToast('SMS integration settings saved successfully!');
+        });
+
+
+        //GA Integration
+        document.getElementById('ga-settings-form').addEventListener('submit', function(e){
+            e.preventDefault();
+            const formData = {
+                trackingId: document.getElementById('ga-tracking-id').value,
+                dataStream: document.getElementById('ga-data-stream').value
+            };
+            console.log('Google Analytics settings:', formData);
+            showToast('Google Analytics settings saved successfully!');
+        });
+
+        //FB Integration
+        document.getElementById('fb-settings-form').addEventListener('submit', function(e){
+            e.preventDefault();
+            const formData = {
+                appId: document.getElementById('fb-app-id').value,
+                appSecret: document.getElementById('fb-app-secret').value,
+                pixelEnabled: document.getElementById('fb-pixel').checked,
+                socialPluginsEnabled: document.getElementById('fb-social').checked
+            };
+            console.log('Facebook settings:', formData);
+            showToast('Facebook settings saved successfully!');
+        });
+
+        // Placeholder functions - replace with actual implementation
+        function configureGoogleAnalytics() {
+            alert('Configure Google Analytics - Placeholder');
+        }
+
+        function configureFacebookAPI() {
+            alert('Configure Facebook API - Placeholder');
+        }
+    });
+
+    function showToast(message, type = 'success') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Create toast element
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'}`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toastEl);
+
+        // Initialize and show the toast
+        const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+        toast.show();
+
+        // Remove toast after it's hidden
+        toastEl.addEventListener('hidden.bs.toast', function() {
+            toastEl.remove();
+        });
+    }
+</script>
+{% endblock %}

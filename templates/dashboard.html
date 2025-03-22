@@ -33,7 +33,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Source-specific stats -->
         {% for source in sources %}
         <div class="col-md-3 mb-3">
@@ -45,7 +45,7 @@
                             <h2 class="card-title mb-0" id="source-count-{{ source.id }}">0</h2>
                         </div>
                         <div class="stat-icon" style="color: {{ source.color }}">
-                            <i class="fas fa-{% if source.id == 'crm' %}users{% elif source.id == 'form' %}file-alt{% elif source.id == 'email' %}envelope{% else %}asterisk{% endif %}"></i>
+                            <i class="fas fa-{% if source.id == 'crm' %}users{% elif source.id == 'form' %}file-alt{% elif source.id == 'email' %}envelope{% elif source.id == 'stripe' %}credit-card{% elif source.id == 'paypal' %}dollar-sign{% elif source.id == 'cart' %}shopping-cart{% elif source.id == 'google' %}chart-line{% elif source.id == 'whatsapp' %}comments{% elif source.id == 'facebook' %}thumbs-up{% elif source.id == 'newsletter' %}envelope-open{% else %}asterisk{% endif %}"></i>
                         </div>
                     </div>
                 </div>
@@ -67,7 +67,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Doughnut Chart: Source Distribution -->
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm">
@@ -88,7 +88,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Filter Dashboard</h5>
-                    
+
                     <form id="filter-form">
                         <div class="mb-3">
                             <label for="date-range" class="form-label">Date Range</label>
@@ -100,7 +100,7 @@
                                 <option value="custom">Custom Range</option>
                             </select>
                         </div>
-                        
+
                         <div id="custom-date-range" class="mb-3" style="display: none;">
                             <div class="row">
                                 <div class="col-6">
@@ -113,7 +113,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Source Type</label>
                             <div class="source-filter-checkboxes">
@@ -127,14 +127,14 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-primary">Apply Filters</button>
                         <button type="button" class="btn btn-secondary" id="reset-filters">Reset</button>
                     </form>
                 </div>
             </div>
         </div>
-        
+
         <!-- Recent Webhooks -->
         <div class="col-md-8 mb-3">
             <div class="card shadow-sm">

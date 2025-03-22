@@ -204,12 +204,27 @@ print(response.json())</code></pre>
                         
                         <div class="mb-3">
                             <label for="test-data" class="form-label">JSON Payload</label>
-                            <textarea class="form-control" id="test-data" rows="5" required>{
-  "source": "form",
-  "name": "John Doe",
-  "email": "john@example.com",
-  "message": "This is a test webhook"
-}</textarea>
+                            <textarea class="form-control" id="test-data" rows="5" required></textarea>
+<script>
+// Function to update test data
+function updateTestData() {
+    const sourceSelect = document.getElementById('test-source');
+    const source = sourceSelect.value || sourceSelect.options[0].value; // Use first option if none selected
+    const testData = {
+        source: source,
+        name: "John Doe",
+        email: "john@example.com",
+        message: "This is a test webhook"
+    };
+    document.getElementById('test-data').value = JSON.stringify(testData, null, 2);
+}
+
+// Update when source changes
+document.getElementById('test-source').addEventListener('change', updateTestData);
+
+// Set initial value when page loads
+document.addEventListener('DOMContentLoaded', updateTestData);
+</script>
                         </div>
                         
                         <button type="submit" class="btn btn-primary">Send Test Webhook</button>

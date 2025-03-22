@@ -49,6 +49,12 @@ def transform_for_charts(data):
             'crm': '#4CAF50',
             'form': '#2196F3',
             'email': '#F44336',
+            'stripe': '#6772E5', 
+            'paypal': '#003087',
+            'cart': '#FF9800',
+            'google': '#EA4335',
+            'whatsapp': '#25D366',
+            'facebook': '#1877F2',
             'other': '#9C27B0'
         }
         

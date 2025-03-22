@@ -1,0 +1,228 @@
+{% extends "layout.html" %}
+
+{% block title %}Email Settings{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title">Email Settings</h2>
+                    <p class="text-muted">Configure email notification settings and SMTP configuration</p>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="list-group">
+                                <a href="/settings" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-cog me-2"></i> General Settings
+                                </a>
+                                <a href="/settings/email" class="list-group-item list-group-item-action active">
+                                    <i class="fas fa-envelope me-2"></i> Email Settings
+                                </a>
+                                <a href="/settings/external-storage" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-database me-2"></i> External Storage Configuration
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form id="email-settings-form">
+                        <div class="mb-4">
+                            <h5>Email Delivery Settings</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Email Provider</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="email_provider" id="provider_smtp" value="smtp" {% if email_settings.provider == 'smtp' %}checked{% endif %}>
+                                    <label class="form-check-label" for="provider_smtp">
+                                        Custom SMTP Server
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="email_provider" id="provider_sendgrid" value="sendgrid" {% if email_settings.provider == 'sendgrid' %}checked{% endif %}>
+                                    <label class="form-check-label" for="provider_sendgrid">
+                                        SendGrid
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="email_provider" id="provider_mailgun" value="mailgun" {% if email_settings.provider == 'mailgun' %}checked{% endif %}>
+                                    <label class="form-check-label" for="provider_mailgun">
+                                        Mailgun
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="smtp-settings" class="mb-4 provider-settings" {% if email_settings.provider != 'smtp' %}style="display: none;"{% endif %}>
+                            <h5>SMTP Settings</h5>
+                            <div class="mb-3">
+                                <label for="smtp_host" class="form-label">SMTP Host</label>
+                                <input type="text" class="form-control" id="smtp_host" name="smtp_host" value="{{ email_settings.smtp_host or '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="smtp_port" class="form-label">SMTP Port</label>
+                                <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="{{ email_settings.smtp_port or '587' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="smtp_username" class="form-label">SMTP Username</label>
+                                <input type="text" class="form-control" id="smtp_username" name="smtp_username" value="{{ email_settings.smtp_username or '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="smtp_password" class="form-label">SMTP Password</label>
+                                <input type="password" class="form-control" id="smtp_password" name="smtp_password" value="{{ email_settings.smtp_password or '' }}">
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="smtp_use_tls" name="smtp_use_tls" {% if email_settings.smtp_use_tls %}checked{% endif %}>
+                                <label class="form-check-label" for="smtp_use_tls">Use TLS</label>
+                            </div>
+                        </div>
+
+                        <div id="sendgrid-settings" class="mb-4 provider-settings" {% if email_settings.provider != 'sendgrid' %}style="display: none;"{% endif %}>
+                            <h5>SendGrid Settings</h5>
+                            <div class="mb-3">
+                                <label for="sendgrid_api_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="sendgrid_api_key" name="sendgrid_api_key" value="{{ email_settings.sendgrid_api_key or '' }}">
+                            </div>
+                        </div>
+
+                        <div id="mailgun-settings" class="mb-4 provider-settings" {% if email_settings.provider != 'mailgun' %}style="display: none;"{% endif %}>
+                            <h5>Mailgun Settings</h5>
+                            <div class="mb-3">
+                                <label for="mailgun_api_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="mailgun_api_key" name="mailgun_api_key" value="{{ email_settings.mailgun_api_key or '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="mailgun_domain" class="form-label">Domain</label>
+                                <input type="text" class="form-control" id="mailgun_domain" name="mailgun_domain" value="{{ email_settings.mailgun_domain or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Email Notification Configuration</h5>
+                            <div class="mb-3">
+                                <label for="from_email" class="form-label">From Email Address</label>
+                                <input type="email" class="form-control" id="from_email" name="from_email" value="{{ email_settings.from_email or '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="from_name" class="form-label">From Name</label>
+                                <input type="text" class="form-control" id="from_name" name="from_name" value="{{ email_settings.from_name or '' }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="notification_interval" class="form-label">Notification Interval (minutes)</label>
+                                <input type="number" class="form-control" id="notification_interval" name="notification_interval" value="{{ email_settings.notification_interval or '30' }}" min="5" max="1440">
+                                <small class="form-text text-muted">Minimum interval between email notifications (to prevent flooding)</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Integration Settings</h5>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="notify_on_webhook" name="notify_on_webhook" {% if email_settings.notify_on_webhook %}checked{% endif %}>
+                                <label class="form-check-label" for="notify_on_webhook">Notify on new webhook</label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="notify_on_error" name="notify_on_error" {% if email_settings.notify_on_error %}checked{% endif %}>
+                                <label class="form-check-label" for="notify_on_error">Notify on processing error</label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="include_payload" name="include_payload" {% if email_settings.include_payload %}checked{% endif %}>
+                                <label class="form-check-label" for="include_payload">Include webhook payload in notification</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary">Save Email Settings</button>
+                            <button type="button" id="test-email-btn" class="btn btn-outline-secondary ms-2">Send Test Email</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle provider settings based on selected provider
+    const providerRadios = document.querySelectorAll('input[name="email_provider"]');
+    const providerSettings = document.querySelectorAll('.provider-settings');
+    
+    providerRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            providerSettings.forEach(settings => {
+                settings.style.display = 'none';
+            });
+            
+            const selectedProvider = this.value;
+            document.getElementById(`${selectedProvider}-settings`).style.display = 'block';
+        });
+    });
+
+    // Handle form submission
+    const form = document.getElementById('email-settings-form');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const data = {};
+        
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('smtp_use_tls') || key.startsWith('notify_') || key.startsWith('include_')) {
+                data[key] = value === 'on';
+            } else {
+                data[key] = value;
+            }
+        }
+        
+        try {
+            const response = await fetch('/api/settings/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                showToast('Email settings saved successfully!');
+            } else {
+                showToast('Failed to save email settings', 'error');
+            }
+        } catch (error) {
+            showToast('Error saving email settings', 'error');
+        }
+    });
+    
+    // Handle test email button
+    const testEmailBtn = document.getElementById('test-email-btn');
+    
+    testEmailBtn.addEventListener('click', async function() {
+        try {
+            const response = await fetch('/api/settings/email/test', {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                showToast('Test email sent successfully!');
+            } else {
+                const result = await response.json();
+                showToast(result.message || 'Failed to send test email', 'error');
+            }
+        } catch (error) {
+            showToast('Error sending test email', 'error');
+        }
+    });
+});
+</script>
+{% endblock %}

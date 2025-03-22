@@ -1,0 +1,31 @@
+{
+  "source": "newsletter",
+  "name": "Emily Parker",
+  "email": "emily.parker@example.com",
+  "frequency": "weekly",
+  "interests": ["technology", "business", "data-science"],
+  "subscribe_date": "2025-03-22T10:30:00Z",
+  "source_page": "blog-technology-trends",
+  "utm_source": "social-media",
+  "utm_medium": "linkedin",
+  "utm_campaign": "newsletter-q1-2025",
+  "preferences": {
+    "format": "html",
+    "special_offers": true,
+    "product_updates": true,
+    "case_studies": true,
+    "industry_news": false
+  },
+  "gdpr_consent": true,
+  "marketing_consent": true,
+  "device_info": {
+    "browser": "Chrome",
+    "platform": "Windows",
+    "screen_size": "1920x1080"
+  },
+  "metadata": {
+    "signup_completion_time_sec": 45,
+    "form_version": "v2.3",
+    "ab_test_variant": "design-b"
+  }
+}

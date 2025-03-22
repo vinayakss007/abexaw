@@ -1,0 +1,48 @@
+{
+  "source": "scanner",
+  "scan_id": "d8e9f0a1-b2c3-d4e5-f6a7-b8c9d0e1f2a3",
+  "scan_type": "image",
+  "event_type": "scan_processed",
+  "data": {
+    "file_name": "invoice_march_2025.jpg",
+    "timestamp": "2025-03-22T10:15:00Z",
+    "extracted_text": "INVOICE\n\nINVOICE #: INV-2025-0322\nDATE: March 22, 2025\n\nBILL TO:\nAcme Corporation\n123 Business St.\nBusiness City, BC 12345\n\nDESCRIPTION                 QTY    RATE    AMOUNT\n----------------------------------------------\nPremium Subscription        1     $99.00   $99.00\nAdditional Users           5     $10.00   $50.00\nPriority Support           1     $25.00   $25.00\n\nSUBTOTAL                                 $174.00\nTAX (8%)                                  $13.92\nTOTAL                                    $187.92\n\nPayment due within 30 days.\nThank you for your business!",
+    "structured_data": {
+      "invoice_number": "INV-2025-0322",
+      "date": "2025-03-22",
+      "customer": "Acme Corporation",
+      "items": [
+        {
+          "description": "Premium Subscription",
+          "quantity": 1,
+          "rate": 99.00,
+          "amount": 99.00
+        },
+        {
+          "description": "Additional Users",
+          "quantity": 5,
+          "rate": 10.00,
+          "amount": 50.00
+        },
+        {
+          "description": "Priority Support",
+          "quantity": 1,
+          "rate": 25.00,
+          "amount": 25.00
+        }
+      ],
+      "subtotal": 174.00,
+      "tax": 13.92,
+      "total": 187.92,
+      "terms": "Payment due within 30 days"
+    }
+  },
+  "metadata": {
+    "file_size": 256789,
+    "file_type": "image/jpeg",
+    "scan_date": "2025-03-22T10:15:00Z",
+    "scan_resolution_dpi": 300,
+    "processing_time_ms": 1250,
+    "confidence_score": 0.92
+  }
+}

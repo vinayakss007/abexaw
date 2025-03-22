@@ -35,6 +35,9 @@
                 <li {% if request.path == '/webhooks' %}class="active"{% endif %}>
                     <a href="/webhooks"><i class="fas fa-plug"></i> Webhooks</a>
                 </li>
+                <li {% if request.path.startswith('/scanner') %}class="active"{% endif %}>
+                    <a href="/scanner"><i class="fas fa-file-image"></i> Scanner</a>
+                </li>
                 <li {% if request.path == '/integrations' %}class="active"{% endif %}>
                     <a href="/integrations"><i class="fas fa-link"></i> Integrations</a>
                 </li>

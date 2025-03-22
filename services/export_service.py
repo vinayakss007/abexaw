@@ -195,7 +195,9 @@ def generate_export_filename(extension: str, source_filter: Optional[str] = None
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     if source_filter:
-        return f"webhook_data_{source_filter}_{timestamp}.{extension}"
+        # Normalize source filter to lowercase to ensure consistent filenames
+        source_name = source_filter.lower()
+        return f"webhook_data_{source_name}_{timestamp}.{extension}"
     else:
         return f"webhook_data_{timestamp}.{extension}"
 

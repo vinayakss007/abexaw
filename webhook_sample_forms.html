@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Data Submission Examples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1, h2, h3 {
+            color: #2196F3;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .form-container {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea, select {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #0b7dda;
+        }
+        
+        .checkbox-group, .radio-group {
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-group label, .radio-group label {
+            font-weight: normal;
+            margin-right: 15px;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .checkbox-group input[type="checkbox"], .radio-group input[type="radio"] {
+            margin-right: 5px;
+            margin-bottom: 0;
+        }
+        
+        .response {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background-color: #f0f0f0;
+            border-color: #ddd;
+            border-bottom-color: transparent;
+        }
+        
+        .tab:hover {
+            background-color: #e9e9e9;
+        }
+        
+        .payload-preview {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+        }
+        
+        .code-block {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Webhook Data Submission Examples</h1>
+    
+    <div class="section">
+        <h2>Introduction</h2>
+        <p>
+            This page provides working examples of forms that send data to the webhook system. Use these examples to 
+            understand how to properly format data for different source types.
+        </p>
+        <p>
+            Each form shows a preview of the payload that will be sent to the webhook endpoint. After submitting, 
+            you'll see the response from the server.
+        </p>
+    </div>
+    
+    <div class="section">
+        <h2>1. Standard Form Submissions</h2>
+        <div class="container">
+            <div class="form-container">
+                <h3>Contact Form</h3>
+                <form id="contactForm" class="form-example">
+                    <input type="hidden" name="source" value="form">
+                    <input type="hidden" name="form_type" value="contact">
+                    
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required placeholder="John Doe">
+                    
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="john@example.com">
+                    
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" name="phone" placeholder="123-456-7890">
+                    
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="4" required placeholder="Enter your message here..."></textarea>
+                    
+                    <button type="submit">Submit Form</button>
+                    
+                    <div class="payload-preview" id="contactFormPayload">
+                        {
+                            "source": "form",
+                            "form_type": "contact",
+                            "name": "",
+                            "email": "",
+                            "phone": "",
+                            "message": ""
+                        }
+                    </div>
+                    
+                    <div class="response" id="contactFormResponse" style="display: none;"></div>
+                </form>
+            </div>
+            
+            <div class="form-container">
+                <h3>Registration Form</h3>
+                <form id="registrationForm" class="form-example">
+                    <input type="hidden" name="source" value="form">
+                    <input type="hidden" name="form_type" value="registration">
+                    
+                    <label for="reg-name">Name</label>
+                    <input type="text" id="reg-name" name="name" required placeholder="Alice Johnson">
+                    
+                    <label for="reg-email">Email</label>
+                    <input type="email" id="reg-email" name="email" required placeholder="alice@example.com">
+                    
+                    <label for="company">Company</label>
+                    <input type="text" id="company" name="company" placeholder="Tech Solutions">
+                    
+                    <label for="job-title">Job Title</label>
+                    <input type="text" id="job-title" name="job_title" placeholder="Product Manager">
+                    
+                    <label for="industry">Industry</label>
+                    <select id="industry" name="industry">
+                        <option value="">Select Industry</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    
+                    <label for="employees">Number of Employees</label>
+                    <select id="employees" name="employees">
+                        <option value="">Select Range</option>
+                        <option value="1-10">1-10</option>
+                        <option value="11-50">11-50</option>
+                        <option value="51-200">51-200</option>
+                        <option value="201-1000">201-1000</option>
+                        <option value="1000+">1000+</option>
+                    </select>
+                    
+                    <button type="submit">Register</button>
+                    
+                    <div class="payload-preview" id="registrationFormPayload">
+                        {
+                            "source": "form",
+                            "form_type": "registration",
+                            "name": "",
+                            "email": "",
+                            "company": "",
+                            "job_title": "",
+                            "industry": "",
+                            "employees": ""
+                        }
+                    </div>
+                    
+                    <div class="response" id="registrationFormResponse" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Newsletter Subscriptions</h2>
+        <div class="container">
+            <div class="form-container">
+                <h3>Basic Newsletter Signup</h3>
+                <form id="basicNewsletterForm" class="form-example">
+                    <input type="hidden" name="source" value="newsletter">
+                    
+                    <label for="nl-name">Name</label>
+                    <input type="text" id="nl-name" name="name" required placeholder="Carol Miller">
+                    
+                    <label for="nl-email">Email</label>
+                    <input type="email" id="nl-email" name="email" required placeholder="carol@example.com">
+                    
+                    <button type="submit">Subscribe</button>
+                    
+                    <div class="payload-preview" id="basicNewsletterFormPayload">
+                        {
+                            "source": "newsletter",
+                            "name": "",
+                            "email": ""
+                        }
+                    </div>
+                    
+                    <div class="response" id="basicNewsletterFormResponse" style="display: none;"></div>
+                </form>
+            </div>
+            
+            <div class="form-container">
+                <h3>Advanced Newsletter Subscription</h3>
+                <form id="advancedNewsletterForm" class="form-example">
+                    <input type="hidden" name="source" value="newsletter">
+                    
+                    <label for="adv-nl-name">Name</label>
+                    <input type="text" id="adv-nl-name" name="name" required placeholder="David Wilson">
+                    
+                    <label for="adv-nl-email">Email</label>
+                    <input type="email" id="adv-nl-email" name="email" required placeholder="david@example.com">
+                    
+                    <label>Frequency</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="frequency" value="daily">
+                            Daily
+                        </label>
+                        <label>
+                            <input type="radio" name="frequency" value="weekly" checked>
+                            Weekly
+                        </label>
+                        <label>
+                            <input type="radio" name="frequency" value="monthly">
+                            Monthly
+                        </label>
+                    </div>
+                    
+                    <label>Interests</label>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="interests" value="technology" checked>
+                            Technology
+                        </label>
+                        <label>
+                            <input type="checkbox" name="interests" value="business">
+                            Business
+                        </label>
+                        <label>
+                            <input type="checkbox" name="interests" value="marketing">
+                            Marketing
+                        </label>
+                    </div>
+                    
+                    <label>
+                        <input type="checkbox" name="gdpr_consent" value="true" checked>
+                        I consent to receiving marketing emails
+                    </label>
+                    
+                    <button type="submit">Subscribe</button>
+                    
+                    <div class="payload-preview" id="advancedNewsletterFormPayload">
+                        {
+                            "source": "newsletter",
+                            "name": "",
+                            "email": "",
+                            "frequency": "weekly",
+                            "interests": ["technology"],
+                            "gdpr_consent": true,
+                            "subscribe_date": "2025-03-22T10:00:00Z"
+                        }
+                    </div>
+                    
+                    <div class="response" id="advancedNewsletterFormResponse" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Data Source Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Source Type</th>
+                    <th>Description</th>
+                    <th>Required Fields</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>form</code></td>
+                    <td>Generic web form submissions</td>
+                    <td>source, name, email</td>
+                </tr>
+                <tr>
+                    <td><code>newsletter</code></td>
+                    <td>Newsletter subscription forms</td>
+                    <td>source, email</td>
+                </tr>
+                <tr>
+                    <td><code>scanner</code></td>
+                    <td>Document scanner processed data</td>
+                    <td>source, scan_id</td>
+                </tr>
+                <tr>
+                    <td><code>crm</code></td>
+                    <td>CRM system data (leads, contacts)</td>
+                    <td>source, event_type</td>
+                </tr>
+                <tr>
+                    <td><code>stripe</code></td>
+                    <td>Stripe payment processing webhooks</td>
+                    <td>source, type, object</td>
+                </tr>
+                <tr>
+                    <td><code>paypal</code></td>
+                    <td>PayPal payment processing webhooks</td>
+                    <td>source, event_type, resource</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>4. Code Examples</h2>
+        
+        <h3>jQuery Example</h3>
+        <div class="code-block">
+$.ajax({
+    url: '/api/webhook',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+        source: 'form',
+        name: 'John Doe',
+        email: 'john@example.com',
+        message: 'Hello world'
+    }),
+    success: function(response) {
+        console.log('Success:', response);
+    },
+    error: function(error) {
+        console.error('Error:', error);
+    }
+});
+        </div>
+        
+        <h3>Fetch API Example</h3>
+        <div class="code-block">
+fetch('/api/webhook', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        source: 'newsletter',
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        frequency: 'weekly'
+    })
+})
+.then(response => response.json())
+.then(data => console.log('Success:', data))
+.catch(error => console.error('Error:', error));
+        </div>
+        
+        <h3>Python Requests Example</h3>
+        <div class="code-block">
+import requests
+import json
+
+webhook_data = {
+    'source': 'form',
+    'form_type': 'contact',
+    'name': 'Alice Johnson',
+    'email': 'alice@example.com',
+    'message': 'This is a test message'
+}
+
+response = requests.post(
+    'https://yourdomain.com/api/webhook',
+    headers={'Content-Type': 'application/json'},
+    data=json.dumps(webhook_data)
+)
+
+print('Status Code:', response.status_code)
+print('Response:', response.json())
+        </div>
+    </div>
+    
+    <script>
+        // Update payload preview as form values change
+        document.querySelectorAll('.form-example').forEach(form => {
+            const formId = form.id;
+            const payloadPreview = document.getElementById(`${formId}Payload`);
+            
+            // Initial form data object
+            const formData = {};
+            form.querySelectorAll('input, textarea, select').forEach(input => {
+                if (input.name) {
+                    if (input.type === 'checkbox') {
+                        if (input.checked) {
+                            if (input.name === 'interests') {
+                                if (!formData[input.name]) {
+                                    formData[input.name] = [];
+                                }
+                                formData[input.name].push(input.value);
+                            } else {
+                                formData[input.name] = input.value === 'true';
+                            }
+                        }
+                    } else if (input.type === 'radio') {
+                        if (input.checked) {
+                            formData[input.name] = input.value;
+                        }
+                    } else {
+                        formData[input.name] = input.value;
+                    }
+                }
+            });
+            
+            // For newsletter forms, add timestamp
+            if (formId.includes('Newsletter')) {
+                formData.subscribe_date = new Date().toISOString();
+            }
+            
+            // Update preview
+            payloadPreview.textContent = JSON.stringify(formData, null, 4);
+            
+            // Add input event listeners
+            form.querySelectorAll('input, textarea, select').forEach(input => {
+                input.addEventListener('input', updatePayload);
+                
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    input.addEventListener('change', updatePayload);
+                }
+            });
+            
+            function updatePayload() {
+                const updatedData = {};
+                form.querySelectorAll('input, textarea, select').forEach(input => {
+                    if (input.name) {
+                        if (input.type === 'checkbox') {
+                            if (input.name === 'interests') {
+                                if (!updatedData[input.name]) {
+                                    updatedData[input.name] = [];
+                                }
+                                if (input.checked) {
+                                    updatedData[input.name].push(input.value);
+                                }
+                            } else if (input.checked) {
+                                updatedData[input.name] = input.value === 'true';
+                            }
+                        } else if (input.type === 'radio') {
+                            if (input.checked) {
+                                updatedData[input.name] = input.value;
+                            }
+                        } else {
+                            updatedData[input.name] = input.value;
+                        }
+                    }
+                });
+                
+                // For newsletter forms, add timestamp
+                if (formId.includes('Newsletter')) {
+                    updatedData.subscribe_date = new Date().toISOString();
+                }
+                
+                payloadPreview.textContent = JSON.stringify(updatedData, null, 4);
+            }
+            
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const responseElement = document.getElementById(`${formId}Response`);
+                responseElement.style.display = 'block';
+                responseElement.textContent = 'Sending data...';
+                
+                // Gather form data
+                const data = {};
+                form.querySelectorAll('input, textarea, select').forEach(input => {
+                    if (input.name) {
+                        if (input.type === 'checkbox') {
+                            if (input.name === 'interests') {
+                                if (!data[input.name]) {
+                                    data[input.name] = [];
+                                }
+                                if (input.checked) {
+                                    data[input.name].push(input.value);
+                                }
+                            } else if (input.checked) {
+                                data[input.name] = input.value === 'true';
+                            }
+                        } else if (input.type === 'radio') {
+                            if (input.checked) {
+                                data[input.name] = input.value;
+                            }
+                        } else {
+                            data[input.name] = input.value;
+                        }
+                    }
+                });
+                
+                // For newsletter forms, add timestamp
+                if (formId.includes('Newsletter')) {
+                    data.subscribe_date = new Date().toISOString();
+                }
+                
+                // Send data to webhook endpoint
+                fetch('/api/webhook', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    responseElement.textContent = 'Response: ' + JSON.stringify(result, null, 2);
+                    if (result.success) {
+                        alert('Data sent successfully!');
+                    }
+                })
+                .catch(error => {
+                    responseElement.textContent = 'Error: ' + error;
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

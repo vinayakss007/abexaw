@@ -11,8 +11,10 @@ import re
 import hashlib
 import hmac
 import base64
+import uuid
 from functools import wraps
 from typing import Dict, Any, Callable, List
+from services.notification_service import notify_processing_error
 
 logger = logging.getLogger(__name__)
 
@@ -51,20 +53,63 @@ def process_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         dict: Processed webhook data
     """
-    # Determine the source type of the webhook
-    source_type = determine_source(data)
-    
-    # Find the registered processor for this source type
-    processor = _PROCESSOR_REGISTRY.get(source_type)
-    
-    # If no specific processor is found, use the generic processor
-    if not processor:
-        logger.info(f"No specific processor found for {source_type}, using generic processor")
-        return generic_processor(data)
-    
-    # Otherwise, use the registered processor
-    logger.info(f"Processing webhook with {source_type} processor")
-    return processor(data)
+    try:
+        # Determine the source type of the webhook
+        source_type = determine_source(data)
+        
+        # Find the registered processor for this source type
+        processor = _PROCESSOR_REGISTRY.get(source_type)
+        
+        # If no specific processor is found, use the generic processor
+        if not processor:
+            logger.info(f"No specific processor found for {source_type}, using generic processor")
+            return generic_processor(data)
+        
+        # Otherwise, use the registered processor
+        logger.info(f"Processing webhook with {source_type} processor")
+        processed_data = processor(data)
+        
+        # Check if the processor returned an error
+        if 'error' in processed_data:
+            # Generate webhook_id if not present
+            webhook_id = data.get('id') or processed_data.get('id')
+            if not webhook_id:
+                webhook_id = str(uuid.uuid4())
+                processed_data['id'] = webhook_id
+                
+            # Send an error notification
+            error_message = processed_data.get('error', 'Unknown processing error')
+            notify_processing_error(source_type, error_message, webhook_id)
+            
+            # Set error status
+            processed_data['status'] = 'error'
+        
+        return processed_data
+        
+    except Exception as e:
+        # Handle unexpected errors during processing
+        logger.error(f"Unexpected error in webhook processing: {str(e)}")
+        
+        # Determine source type safely
+        try:
+            source_type = determine_source(data)
+        except:
+            source_type = 'unknown'
+        
+        # Generate webhook_id
+        webhook_id = data.get('id', str(uuid.uuid4()))
+        
+        # Send error notification
+        notify_processing_error(source_type, str(e), webhook_id)
+        
+        # Return error information
+        return {
+            'id': webhook_id,
+            'source': source_type,
+            'status': 'error',
+            'error': str(e),
+            'original_data': data
+        }
 
 def determine_source(data: Dict[str, Any]) -> str:
     """
@@ -100,6 +145,10 @@ def determine_source(data: Dict[str, Any]) -> str:
     if 'entry' in data and 'changes' in data.get('entry', [{}])[0] and 'id' in data.get('entry', [{}])[0]:
         return 'facebook'
     
+    # Check for Newsletter webhooks - check first to avoid misclassifying as form
+    if any(keyword in str(data).lower() for keyword in ['newsletter', 'subscribe', 'mailing list']):
+        return 'newsletter'
+    
     # Check for form submission patterns
     if any(field in data for field in ['name', 'email', 'message', 'phone']):
         return 'form'
@@ -111,6 +160,10 @@ def determine_source(data: Dict[str, Any]) -> str:
     # Check for Shopping Cart webhooks
     if any(field in data for field in ['cart', 'product', 'order', 'checkout']):
         return 'cart'
+    
+    # Check for Scanner webhooks
+    if any(field in data for field in ['scan_id', 'extracted_text', 'scan_type', 'scan_data']):
+        return 'scanner'
     
     # Default source type
     return 'other'
@@ -222,7 +275,7 @@ def process_stripe_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
 
 @register_processor('form')
 def process_form_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Process form submission webhooks"""
+    """Process form submission webhooks with enhanced source type detection"""
     try:
         # Create a standardized structure
         processed_data = {
@@ -233,6 +286,28 @@ def process_form_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
             'metadata': {},
             'original_data': data
         }
+        
+        # Detect newsletter forms based on common patterns
+        is_newsletter = False
+        if any(keyword in str(data).lower() for keyword in ['newsletter', 'subscribe', 'mailing list']):
+            processed_data['form_type'] = 'newsletter'
+            is_newsletter = True
+        
+        # Check for specific newsletter fields
+        if any(key in data for key in ['subscribe', 'newsletter_email', 'signup', 'subscription']):
+            processed_data['form_type'] = 'newsletter'
+            is_newsletter = True
+            
+        # Detect collection forms based on common patterns
+        if any(keyword in str(data).lower() for keyword in ['collection', 'product_id', 'category', 'product collection']):
+            processed_data['form_type'] = 'collection_form'
+        
+        # Check for specific collection form fields
+        if any(key in data for key in ['product_id', 'collection_id', 'item_category', 'shopping_category']):
+            processed_data['form_type'] = 'collection_form'
+            
+        # Set source subtype for better categorization in database
+        processed_data['source_subtype'] = processed_data['form_type']
         
         # Process common form fields
         if 'name' in data:
@@ -254,12 +329,30 @@ def process_form_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
             if key not in special_fields:
                 processed_data['submission_data'][key] = value
         
-        # Add metadata
-        if 'user_agent' in data.get('_headers', {}):
-            processed_data['metadata']['user_agent'] = data['_headers']['user_agent']
+        # Enhanced newsletter processing - ensure newsletter content is captured
+        if is_newsletter:
+            # Look for newsletter content in various possible fields
+            for key in ['content', 'newsletter_content', 'email_content', 'template']:
+                if key in data:
+                    processed_data['submission_data']['newsletter_content'] = data[key]
+                    break
+            
+            # Look for preferences
+            for key in ['preferences', 'frequency', 'email_preferences', 'subscription_preferences']:
+                if key in data:
+                    processed_data['submission_data'][key] = data[key]
+            
+            # Set subscription status
+            processed_data['submission_data']['subscribed'] = True
+            processed_data['submission_data']['subscription_date'] = data.get('timestamp', '')
         
-        if 'referer' in data.get('_headers', {}):
-            processed_data['metadata']['referer'] = data['_headers']['referer']
+        # Add metadata
+        if '_headers' in data and isinstance(data['_headers'], dict):
+            if 'user_agent' in data['_headers']:
+                processed_data['metadata']['user_agent'] = data['_headers']['user_agent']
+            
+            if 'referer' in data['_headers']:
+                processed_data['metadata']['referer'] = data['_headers']['referer']
         
         return processed_data
     
@@ -267,13 +360,14 @@ def process_form_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
         logger.error(f"Error processing form webhook: {str(e)}")
         return {
             'source': 'form',
+            'source_subtype': 'error',
             'error': str(e),
             'original_data': data
         }
 
 @register_processor('crm')
 def process_crm_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Process CRM webhooks"""
+    """Process CRM webhooks with enhanced subtype detection"""
     try:
         # Create a standardized structure
         processed_data = {
@@ -304,6 +398,30 @@ def process_crm_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
             if entity_data:
                 processed_data['entity_type'] = 'generic'
                 processed_data['entity_data'] = entity_data
+                
+        # Set source subtype for better categorization - use either crm_type or entity_type
+        if processed_data['crm_type'] != 'generic':
+            processed_data['source_subtype'] = processed_data['crm_type']
+        elif processed_data['entity_type']:
+            processed_data['source_subtype'] = processed_data['entity_type']
+        else:
+            processed_data['source_subtype'] = 'unknown'
+            
+        # Look for specific CRM systems in the data
+        crm_systems = {
+            'salesforce': ['salesforce', 'sf_', 'sfdc'],
+            'hubspot': ['hubspot', 'hs_'],
+            'zoho': ['zoho', 'zcrm'],
+            'pipedrive': ['pipedrive', 'pd_deal'],
+            'dynamics': ['dynamics', 'ms_crm', 'mscrm']
+        }
+        
+        data_str = str(data).lower()
+        for system, keywords in crm_systems.items():
+            if any(keyword in data_str for keyword in keywords):
+                processed_data['crm_type'] = system
+                processed_data['source_subtype'] = system
+                break
         
         return processed_data
     
@@ -311,6 +429,7 @@ def process_crm_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
         logger.error(f"Error processing CRM webhook: {str(e)}")
         return {
             'source': 'crm',
+            'source_subtype': 'error',
             'error': str(e),
             'original_data': data
         }
@@ -370,17 +489,132 @@ def generic_processor(data: Dict[str, Any]) -> Dict[str, Any]:
     # Create a standardized output structure
     processed_data = {
         'source': source,
+        'source_subtype': data.get('type', 'generic'),
+        'contact_info': {},
+        'submission_data': {},
+        'metadata': {},
         'processed': True,
         'original_data': data
     }
     
-    # Remove headers from the top level
-    if '_headers' in processed_data:
-        del processed_data['_headers']
+    # Process common fields if they exist
+    if 'email' in data:
+        processed_data['contact_info']['email'] = data['email']
+    if 'name' in data:
+        processed_data['contact_info']['name'] = data['name']
+    if 'message' in data:
+        processed_data['submission_data']['message'] = data['message']
+    
+    # Handle subscription data
+    if source.lower() in ['subscribed', 'newsletter', 'subscription']:
+        processed_data['subscribed'] = True
+        processed_data['subscription_date'] = data.get('timestamp', '')
     
     # Try to extract useful information
     for key in ['id', 'event', 'type', 'action', 'status', 'timestamp']:
         if key in data:
-            processed_data[key] = data[key]
+            processed_data['submission_data'][key] = data[key]
     
     return processed_data
+@register_processor('newsletter')
+def process_newsletter_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Process newsletter webhooks
+    
+    Newsletter webhooks contain data from newsletter subscriptions, including
+    email, name, and preferences.
+    """
+    try:
+        # Create a standardized structure
+        processed_data = {
+            'source': 'newsletter',
+            'contact_info': {},
+            'preferences': {},
+            'metadata': {},
+            'original_data': data
+        }
+        
+        # Process common fields
+        if 'name' in data:
+            processed_data['contact_info']['name'] = data['name']
+        
+        if 'email' in data:
+            processed_data['contact_info']['email'] = data['email']
+        
+        if 'phone' in data:
+            processed_data['contact_info']['phone'] = data['phone']
+        
+        if 'message' in data:
+            processed_data['message'] = data['message']
+        
+        # Extract newsletter-specific fields
+        for key in ['frequency', 'preferences', 'interests', 'topics']:
+            if key in data:
+                processed_data['preferences'][key] = data[key]
+        
+        # Set subscription status
+        processed_data['subscribed'] = True
+        processed_data['subscription_date'] = data.get('timestamp', '')
+        
+        # Add metadata
+        if '_headers' in data and isinstance(data['_headers'], dict):
+            if 'user_agent' in data['_headers']:
+                processed_data['metadata']['user_agent'] = data['_headers']['user_agent']
+            
+            if 'referer' in data['_headers']:
+                processed_data['metadata']['referer'] = data['_headers']['referer']
+        
+        return processed_data
+    
+    except Exception as e:
+        logger.error(f"Error processing newsletter webhook: {str(e)}")
+        return {
+            'source': 'newsletter',
+            'error': str(e),
+            'original_data': data
+        }
+
+@register_processor('scanner')
+def process_scanner_webhook(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Process scanner webhooks
+    
+    Scanner webhooks contain data from processed document scans, including
+    extracted text, structured data, and metadata about the scanned document.
+    """
+    try:
+        # Generate ID if not provided
+        webhook_id = data.get('scan_id') or str(uuid.uuid4())
+        
+        # Get event type from data or default to 'scan_processed'
+        event_type = data.get('event_type', 'scan_processed')
+        
+        # Extract source subtype (image, pdf, etc.)
+        source_subtype = data.get('source_subtype', 'unknown')
+        
+        # Get scan data
+        scan_data = data.get('data', {})
+        
+        # Create structured payload for database
+        processed_data = {
+            'id': webhook_id,
+            'source': 'scanner',
+            'source_subtype': source_subtype,
+            'event_type': event_type,
+            'status': 'processed',
+            'data': scan_data,
+            'metadata': data.get('metadata', {})
+        }
+        
+        logger.info(f"Processed scanner webhook: {webhook_id} - Document type: {source_subtype}")
+        
+        return processed_data
+    
+    except Exception as e:
+        logger.error(f"Error processing scanner webhook: {str(e)}")
+        return {
+            'source': 'scanner',
+            'source_subtype': 'error',
+            'error': str(e),
+            'original_data': data
+        }

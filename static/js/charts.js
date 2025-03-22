@@ -122,50 +122,132 @@ function initializeDoughnutChart() {
  * Update line chart with new data
  */
 function updateLineChart(chartData) {
-    if (!lineChart || !chartData) return;
+    if (!lineChart) {
+        console.warn('Line chart not initialized');
+        return;
+    }
     
-    lineChart.data.labels = chartData.labels;
-    lineChart.data.datasets = chartData.datasets;
-    lineChart.update();
+    if (!chartData || !chartData.labels || !chartData.datasets) {
+        console.warn('Invalid chart data for line chart', chartData);
+        
+        // Display empty data state
+        try {
+            lineChart.data.labels = ['No Data'];
+            lineChart.data.datasets = [{
+                label: 'No Data Available',
+                data: [0],
+                backgroundColor: '#e0e0e0',
+                borderColor: '#e0e0e0'
+            }];
+            lineChart.update();
+        } catch (e) {
+            console.error('Failed to show empty state in line chart:', e);
+        }
+        return;
+    }
+    
+    try {
+        // Make sure datasets contain valid data
+        const validatedDatasets = chartData.datasets.map(dataset => {
+            // Ensure dataset has all required properties
+            return {
+                label: dataset.label || 'Unknown',
+                data: Array.isArray(dataset.data) ? dataset.data.map(val => Number(val) || 0) : [0],
+                backgroundColor: dataset.backgroundColor || '#cccccc',
+                borderColor: dataset.borderColor || '#cccccc',
+                fill: dataset.fill !== undefined ? dataset.fill : false
+            };
+        });
+        
+        lineChart.data.labels = chartData.labels;
+        lineChart.data.datasets = validatedDatasets;
+        lineChart.update();
+    } catch (error) {
+        console.error('Error updating line chart:', error);
+        
+        // On error, display simple placeholder
+        try {
+            lineChart.data.labels = ['Error'];
+            lineChart.data.datasets = [{
+                label: 'Error Loading Data',
+                data: [0],
+                backgroundColor: '#ffcccc',
+                borderColor: '#ffcccc'
+            }];
+            lineChart.update();
+        } catch (e) {
+            console.error('Failed to show error state in line chart:', e);
+        }
+    }
 }
 
 /**
  * Update doughnut chart with new data
  */
 function updateDoughnutChart(chartData) {
-    if (!doughnutChart || !chartData || !chartData.datasets || chartData.datasets.length === 0) return;
+    if (!doughnutChart) {
+        console.warn('Doughnut chart not initialized');
+        return;
+    }
     
-    // Calculate source totals from the line chart data
-    const sourceTotals = {};
-    const sourceColors = {};
-    
-    chartData.datasets.forEach(dataset => {
-        const sourceTotal = dataset.data.reduce((sum, value) => sum + value, 0);
-        const sourceName = dataset.label;
+    if (!chartData || !chartData.datasets) {
+        console.warn('Invalid chart data for doughnut chart');
         
-        sourceTotals[sourceName] = sourceTotal;
-        sourceColors[sourceName] = dataset.backgroundColor;
-    });
-    
-    // Prepare data for doughnut chart
-    const labels = Object.keys(sourceTotals);
-    const data = Object.values(sourceTotals);
-    const colors = labels.map(label => sourceColors[label]);
-    
-    // Check if we have actual data
-    if (data.every(value => value === 0)) {
-        // No data, show "No Data" placeholder
+        // Display no data in chart
         doughnutChart.data.labels = ['No Data'];
         doughnutChart.data.datasets[0].data = [1];
         doughnutChart.data.datasets[0].backgroundColor = ['#e0e0e0'];
-    } else {
-        // Update with real data
-        doughnutChart.data.labels = labels;
-        doughnutChart.data.datasets[0].data = data;
-        doughnutChart.data.datasets[0].backgroundColor = colors;
+        doughnutChart.update();
+        return;
     }
     
-    doughnutChart.update();
+    try {
+        // Calculate source totals from the line chart data
+        const sourceTotals = {};
+        const sourceColors = {};
+        
+        chartData.datasets.forEach(dataset => {
+            if (!dataset || !dataset.data) return;
+            
+            const sourceTotal = dataset.data.reduce((sum, value) => sum + (Number(value) || 0), 0);
+            const sourceName = dataset.label || 'Unknown';
+            
+            sourceTotals[sourceName] = sourceTotal;
+            sourceColors[sourceName] = dataset.backgroundColor || '#cccccc';
+        });
+        
+        // Prepare data for doughnut chart
+        const labels = Object.keys(sourceTotals);
+        const data = Object.values(sourceTotals);
+        const colors = labels.map(label => sourceColors[label]);
+        
+        // Check if we have actual data
+        if (data.length === 0 || data.every(value => value === 0)) {
+            // No data, show "No Data" placeholder
+            doughnutChart.data.labels = ['No Data'];
+            doughnutChart.data.datasets[0].data = [1];
+            doughnutChart.data.datasets[0].backgroundColor = ['#e0e0e0'];
+        } else {
+            // Update with real data
+            doughnutChart.data.labels = labels;
+            doughnutChart.data.datasets[0].data = data;
+            doughnutChart.data.datasets[0].backgroundColor = colors;
+        }
+        
+        doughnutChart.update();
+    } catch (error) {
+        console.error('Error updating doughnut chart:', error);
+        
+        // On error, display simple placeholder
+        try {
+            doughnutChart.data.labels = ['Error'];
+            doughnutChart.data.datasets[0].data = [1];
+            doughnutChart.data.datasets[0].backgroundColor = ['#ffcccc'];
+            doughnutChart.update();
+        } catch (e) {
+            console.error('Failed to show error state in doughnut chart:', e);
+        }
+    }
 }
 
 /**

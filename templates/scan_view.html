@@ -1,0 +1,148 @@
+{% extends "layout.html" %}
+
+{% block title %}View Scan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 font-weight-bold">Scan Details</h5>
+                        <div>
+                            <a href="{{ url_for('scanner.scan_history') }}" class="btn btn-outline-secondary btn-sm mr-2">
+                                <i class="fas fa-arrow-left mr-1"></i> Back to History
+                            </a>
+                            <a href="{{ url_for('scanner.scanner_page') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus mr-1"></i> New Scan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-4">
+                                    <h6 class="font-weight-bold mb-3">Document Information</h6>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Scan ID:</small>
+                                        <code>{{ scan.scan_id }}</code>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">File Name:</small>
+                                        <span>{{ scan.file_name }}</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Document Type:</small>
+                                        <span class="badge badge-{{ 'info' if scan.type == 'pdf' else 'secondary' }}">
+                                            {{ scan.type }}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Timestamp:</small>
+                                        <span>{{ scan.timestamp }}</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">File Size:</small>
+                                        <span>{{ (scan.file_size / 1024)|round(1) }} KB</span>
+                                    </div>
+                                    
+                                    {% if scan.type == 'pdf' %}
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Page Count:</small>
+                                        <span>{{ scan.page_count }} pages</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-4">
+                                    <h6 class="font-weight-bold mb-3">Structured Data</h6>
+                                    
+                                    {% if scan.structured_data and scan.structured_data|length > 0 %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Key</th>
+                                                        <th>Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for key, value in scan.structured_data.items() %}
+                                                    <tr>
+                                                        <td><strong>{{ key }}</strong></td>
+                                                        <td>{{ value }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted">No structured data was extracted from this document.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h6 class="font-weight-bold mb-3">Extracted Text</h6>
+                            
+                            {% if scan.type == 'pdf' and scan.pages %}
+                                <!-- PDF with multiple pages -->
+                                <ul class="nav nav-tabs" id="pdfPageTabs" role="tablist">
+                                    {% for page in scan.pages %}
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if loop.first %}active{% endif %}" 
+                                           id="page-{{ page.page_num }}-tab" 
+                                           data-toggle="tab" 
+                                           href="#page-{{ page.page_num }}" 
+                                           role="tab"
+                                           aria-controls="page-{{ page.page_num }}"
+                                           aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                            Page {{ page.page_num }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                
+                                <div class="tab-content p-3" id="pdfPageTabsContent">
+                                    {% for page in scan.pages %}
+                                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                                         id="page-{{ page.page_num }}" 
+                                         role="tabpanel" 
+                                         aria-labelledby="page-{{ page.page_num }}-tab">
+                                        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ page.text }}</pre>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <!-- Single page document or image -->
+                                <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ scan.raw_text }}</pre>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        This scan data has been sent to the webhook system and can be viewed on the main dashboard.
+                        <a href="{{ url_for('dashboard.index') }}" class="alert-link">Go to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
